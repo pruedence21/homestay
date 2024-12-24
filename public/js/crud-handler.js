@@ -1,3 +1,4 @@
+// crud-handler.js
 function crudHandler(config) {
     return {
         showModal: false,
@@ -5,12 +6,12 @@ function crudHandler(config) {
         modalTitle: '',
         formMode: 'create',
         formData: {...config.defaultData},
+        errors: {},
 
-        // Initialize modal for create
         create() {
             this.formMode = 'create';
             this.modalTitle = config.createTitle;
-            this.formData = {...config.defaultData};
+            this.resetForm();
             this.showModal = true;
         },
 
@@ -21,19 +22,16 @@ function crudHandler(config) {
             this.showModal = true;
         },
 
-        // Close modal
-        closeModal() {
-            this.showModal = false;
-            this.formData = {...config.defaultData};
-        },
-
-        // Save data
         async save() {
             this.loading = true;
+            this.errors = {};
+            
             try {
-                const response = await fetch(this.formMode === 'create' 
+                const url = this.formMode === 'create' 
                     ? `${config.baseUrl}/store`
-                    : `${config.baseUrl}/update/${this.formData.id_kamar}`, {
+                    : `${config.baseUrl}/update/${this.formData[config.primaryKey]}`;
+
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -43,10 +41,11 @@ function crudHandler(config) {
                 });
 
                 const data = await response.json();
+                
                 if (data.success) {
                     window.location.reload();
                 } else {
-                    this.errors = data.messages || { error: 'Gagal menyimpan data' };
+                    this.errors = data.messages || { error: data.message || 'Gagal menyimpan data' };
                 }
             } catch (error) {
                 console.error('Error:', error);
@@ -54,6 +53,40 @@ function crudHandler(config) {
             } finally {
                 this.loading = false;
             }
+        },
+
+        async deleteData(id) {
+            if (!confirm('Apakah Anda yakin ingin menghapus data ini?')) return;
+
+            try {
+                const response = await fetch(`${config.baseUrl}/delete/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert(data.message || 'Gagal menghapus data');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan sistem');
+            }
+        },
+
+        resetForm() {
+            this.formData = {...config.defaultData};
+            this.errors = {};
+        },
+
+        closeModal() {
+            this.showModal = false;
+            this.resetForm();
         }
     }
 }

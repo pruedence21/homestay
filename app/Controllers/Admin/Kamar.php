@@ -67,4 +67,53 @@ class Kamar extends BaseController
             
         return $this->response->setJSON($kamarTersedia);
     }
+
+    public function update($id)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->fail('Invalid Request');
+        }
+
+        try {
+            $json = $this->request->getJSON();
+            $data = [
+                'nomor_kamar' => $json->nomor_kamar,
+                'tipe_kamar' => $json->tipe_kamar,
+                'harga' => $json->harga,
+                'status' => $json->status,
+                'deskripsi' => $json->deskripsi ?? ''
+            ];
+
+            if ($this->kamarModel->update($id, $data)) {
+                return $this->respond([
+                    'success' => true,
+                    'message' => 'Kamar berhasil diupdate'
+                ]);
+            }
+
+            return $this->fail($this->kamarModel->errors());
+        } catch (\Exception $e) {
+            return $this->fail('Terjadi kesalahan: ' . $e->getMessage());
+        }
+    }
+
+    public function delete($id)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->fail('Invalid Request');
+        }
+
+        try {
+            if ($this->kamarModel->delete($id)) {
+                return $this->respond([
+                    'success' => true,
+                    'message' => 'Kamar berhasil dihapus'
+                ]);
+            }
+
+            return $this->fail('Gagal menghapus kamar');
+        } catch (\Exception $e) {
+            return $this->fail('Terjadi kesalahan: ' . $e->getMessage());
+        }
+    }
 }

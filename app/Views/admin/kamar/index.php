@@ -5,6 +5,7 @@
     baseUrl: '<?= base_url('admin/kamar') ?>',
     createTitle: 'Tambah Kamar',
     editTitle: 'Edit Kamar',
+    primaryKey: 'id_kamar',
     defaultData: {
         nomor_kamar: '',
         tipe_kamar: '',

@@ -234,4 +234,43 @@ class Booking extends BaseController
             return $this->fail('Terjadi kesalahan: ' . $e->getMessage());
         }
     }
+
+    public function delete($id)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->fail('Invalid Request');
+        }
+
+        try {
+            $booking = $this->bookingModel->find($id);
+            if (!$booking) {
+                return $this->fail('Booking tidak ditemukan');
+            }
+
+            // Start transaction
+            $this->db->transStart();
+
+            // Delete booking and related layanan
+            $this->bookingModel->delete($id);
+            
+            // Update kamar status if needed
+            if ($booking['status'] == 'checkin') {
+                $this->kamarModel->update($booking['id_kamar'], ['status' => 'tersedia']);
+            }
+
+            $this->db->transComplete();
+
+            if ($this->db->transStatus() === false) {
+                return $this->fail('Gagal menghapus booking');
+            }
+
+            return $this->respond([
+                'success' => true,
+                'message' => 'Booking berhasil dihapus'
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->fail('Terjadi kesalahan: ' . $e->getMessage());
+        }
+    }
 }

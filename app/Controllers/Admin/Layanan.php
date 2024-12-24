@@ -71,26 +71,56 @@ class Layanan extends BaseController
             return $this->fail('Invalid Request');
         }
 
-        $json = $this->request->getJSON();
-        $json->id_layanan = $id;
+        try {
+            $json = $this->request->getJSON();
+            
+            // Validate data
+            if (!$this->validate([
+                'nama_layanan' => 'required|min_length[3]',
+                'kategori' => 'required|in_list[makanan,extrabed,snack]',
+                'harga' => 'required|numeric|greater_than[0]'
+            ])) {
+                return $this->fail($this->validator->getErrors());
+            }
 
-        if (!$this->layananModel->save($json)) {
-            return $this->fail($this->layananModel->errors());
+            $data = [
+                'nama_layanan' => $json->nama_layanan,
+                'kategori' => $json->kategori,
+                'harga' => $json->harga,
+                'deskripsi' => $json->deskripsi ?? ''
+            ];
+
+            if ($this->layananModel->update($id, $data)) {
+                return $this->respond([
+                    'success' => true,
+                    'message' => 'Layanan berhasil diupdate'
+                ]);
+            }
+
+            return $this->fail('Gagal mengupdate layanan');
+        } catch (\Exception $e) {
+            return $this->fail('Terjadi kesalahan: ' . $e->getMessage());
         }
-
-        return $this->respond([
-            'success' => true,
-            'message' => 'Layanan berhasil diupdate'
-        ]);
     }
 
     public function delete($id)
     {
-        $this->layananModel->delete($id);
-        return $this->respond([
-            'success' => true,
-            'message' => 'Layanan berhasil dihapus'
-        ]);
+        if (!$this->request->isAJAX()) {
+            return $this->fail('Invalid Request');
+        }
+
+        try {
+            if ($this->layananModel->delete($id)) {
+                return $this->respond([
+                    'success' => true,
+                    'message' => 'Layanan berhasil dihapus'
+                ]);
+            }
+
+            return $this->fail('Gagal menghapus layanan');
+        } catch (\Exception $e) {
+            return $this->fail('Terjadi kesalahan: ' . $e->getMessage());
+        }
     }
 
     public function list()

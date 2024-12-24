@@ -1,10 +1,12 @@
 <?= $this->extend('layout/template') ?>
 
 <?= $this->section('content') ?>
+<!-- For Layanan index -->
 <div x-data="crudHandler({
     baseUrl: '<?= base_url('admin/layanan') ?>',
     createTitle: 'Tambah Layanan',
     editTitle: 'Edit Layanan',
+    primaryKey: 'id_layanan',
     defaultData: {
         nama_layanan: '',
         harga: '',
