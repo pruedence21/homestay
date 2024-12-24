@@ -26,6 +26,7 @@ $routes->group('admin', ['filter' => 'auth'], function($routes) {
     $routes->post('layanan/store', 'Admin\Layanan::store');
     $routes->post('layanan/ubah/(:num)', 'Admin\Layanan::update/$1');
     $routes->get('layanan/hapus/(:num)', 'Admin\Layanan::delete/$1');
+    $routes->get('layanan/list', 'Admin\Layanan::list');
 });
 
 $routes->group('kasir', ['filter' => 'auth'], function($routes) {

@@ -158,22 +158,32 @@
                         <div class="mt-6">
                             <h3 class="text-lg font-medium mb-4">Layanan Tambahan</h3>
                             
-                            <div class="flex justify-between items-center mb-4">
-                                <div class="flex-1">
-                                    <select x-model="selectedLayanan" class="rounded-md border-gray-300">
+                            <!-- Input Layanan -->
+                            <div class="grid grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Pilih Layanan</label>
+                                    <select x-model="selectedLayanan" 
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                                         <option value="">Pilih Layanan</option>
                                         <template x-for="layanan in layananList" :key="layanan.id_layanan">
                                             <option :value="layanan.id_layanan" 
-                                                x-text="`${layanan.nama_layanan} - Rp ${layanan.harga.toLocaleString()}`">
+                                                    x-text="`${layanan.nama_layanan} - Rp ${layanan.harga.toLocaleString()}`">
                                             </option>
                                         </template>
                                     </select>
-                                    <input type="number" x-model="jumlahLayanan" min="1" 
-                                        class="rounded-md border-gray-300 w-24 ml-2" placeholder="Jumlah">
-                                    <button @click="addLayanan()" 
-                                        class="bg-green-500 text-white px-4 py-2 rounded-md ml-2">
-                                        Tambah
-                                    </button>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Jumlah</label>
+                                    <div class="flex space-x-2">
+                                        <input type="number" x-model="jumlahLayanan" min="1"
+                                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                        <button @click="addLayanan()" 
+                                                :disabled="!canAddLayanan()"
+                                                :class="{'opacity-50 cursor-not-allowed': !canAddLayanan()}"
+                                                class="mt-1 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md">
+                                            Tambah
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
@@ -215,18 +225,21 @@
                                 </table>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                        <button type="submit" 
-                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
-                            :disabled="loading">
-                            <span x-text="loading ? 'Menyimpan...' : 'Simpan'"></span>
-                        </button>
-                        <button type="button" @click="showModal = false"
-                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                            Batal
-                        </button>
+                        <!-- Save Booking button -->
+                        <div class="mt-6 flex justify-end space-x-3">
+                            <button @click="showModal = false" 
+                                    class="px-4 py-2 border rounded-md hover:bg-gray-50">
+                                Batal
+                            </button>
+                            <button @click="save()" 
+                                    type="button"
+                                    :disabled="loading || !canSaveBooking()"
+                                    :class="{'opacity-50 cursor-not-allowed': loading || !canSaveBooking()}"
+                                    class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md">
+                                <span x-text="loading ? 'Menyimpan...' : 'Simpan Booking'"></span>
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>

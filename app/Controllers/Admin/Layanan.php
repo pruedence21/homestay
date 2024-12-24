@@ -92,4 +92,9 @@ class Layanan extends BaseController
             'message' => 'Layanan berhasil dihapus'
         ]);
     }
+
+    public function list()
+    {
+        return $this->respond($this->layananModel->findAll());
+    }
 }

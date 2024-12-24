@@ -65,16 +65,11 @@ class Booking extends BaseController
                 'jumlah_tamu' => $json->jumlah_tamu,
                 'total_harga' => $json->total_harga,
                 'status' => 'pending',
-                'total_sebelum_diskon' => $json->total_sebelum_diskon,
-                'total_setelah_diskon' => $json->total_setelah_diskon,
-                'diskon' => $json->diskon,
-                'jenis_diskon' => $json->jenis_diskon
+                'total_sebelum_diskon' => $json->total_sebelum_diskon ?? 0,
+                'total_setelah_diskon' => $json->total_setelah_diskon ?? 0,
+                'diskon' => $json->diskon ?? 0,
+                'jenis_diskon' => $json->jenis_diskon ?? 'nominal'
             ];
-
-            // Validate booking data
-            if (!$this->validate($this->bookingModel->validationRules)) {
-                return $this->fail($this->validator->getErrors());
-            }
 
             // Start transaction
             $this->db->transStart();
@@ -104,7 +99,8 @@ class Booking extends BaseController
 
             return $this->respond([
                 'success' => true,
-                'message' => 'Booking berhasil ditambahkan'
+                'message' => 'Booking berhasil ditambahkan',
+                'id_booking' => $bookingId
             ]);
 
         } catch (\Exception $e) {
@@ -119,17 +115,41 @@ class Booking extends BaseController
             return $this->fail('Invalid Request');
         }
 
-        $json = $this->request->getJSON();
-        $exists = $this->bookingModel->where([
-            'id_kamar' => $json->id_kamar,
-            'status !=' => 'cancelled'
-        ])->where('checkin <=', $json->checkout)
-          ->where('checkout >=', $json->checkin)
-          ->countAllResults() > 0;
+        try {
+            $json = $this->request->getJSON();
+            
+            if (empty($json->id_kamar) || empty($json->checkin) || empty($json->checkout)) {
+                return $this->fail('Data tidak lengkap');
+            }
 
-        return $this->respond([
-            'available' => !$exists
-        ]);
+            // Validate dates
+            $checkin = new \DateTime($json->checkin);
+            $checkout = new \DateTime($json->checkout);
+            
+            if ($checkin > $checkout) {
+                return $this->fail('Tanggal check-in tidak boleh lebih besar dari check-out');
+            }
+
+            // Fix the query syntax
+            $exists = $this->bookingModel
+                ->where('id_kamar', $json->id_kamar)
+                ->whereNotIn('status', ['cancelled', 'checkout'])
+                ->groupStart()
+                    ->where('checkin <', $json->checkout)
+                    ->where('checkout >', $json->checkin)
+                ->groupEnd()
+                ->countAllResults() > 0;
+
+            return $this->respond([
+                'success' => true,
+                'available' => !$exists,
+                'message' => $exists ? 'Kamar tidak tersedia untuk tanggal yang dipilih' : 'Kamar tersedia'
+            ]);
+
+        } catch (\Exception $e) {
+            log_message('error', '[Booking::checkAvailability] ' . $e->getMessage());
+            return $this->fail('Terjadi kesalahan sistem: ' . $e->getMessage());
+        }
     }
 
     public function checkin($id)
